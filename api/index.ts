@@ -1,7 +1,6 @@
-export default async function handler(req: any, res: any) {
-  const mod = await import("../server/_core/index");
-  const { createApp } = mod;
+import { createApp } from "../server/_core/index";
 
+export default async function handler(req: any, res: any) {
   const { app } = await createApp();
 
   return app(req, res);
