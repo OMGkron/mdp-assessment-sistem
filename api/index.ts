@@ -1,5 +1,8 @@
-import createApp from "../server/_core/index";
+export default async function handler(req: any, res: any) {
+  const mod = await import("../server/_core/index.ts");
+  const { createApp } = mod;
 
-const { app } = await createApp();
+  const { app } = await createApp();
 
-export default app;
+  return app(req, res);
+}
