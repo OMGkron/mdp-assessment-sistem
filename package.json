@@ -73,6 +73,8 @@
     "sonner": "^2.0.7",
     "streamdown": "^1.4.0",
     "superjson": "^1.13.3",
+    "lightningcss": "^1.30.1",
+    "lightningcss-linux-x64-gnu": "^1.30.1",
     "tailwind-merge": "^3.3.1",
     "tailwindcss-animate": "^1.0.7",
     "vaul": "^1.1.2",
@@ -112,6 +114,12 @@
     },
     "overrides": {
       "tailwindcss>nanoid": "3.3.7"
-    }
+    },
+    "onlyBuiltDependencies": [
+      "lightningcss",
+      "lightningcss-linux-x64-gnu",
+      "esbuild",
+      "@img/sharp-linux-x64"
+    ]
   }
 }
