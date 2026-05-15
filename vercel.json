@@ -6,17 +6,17 @@
   },
   "builds": [
     {
-      "src": "api/index.js",
+      "src": "api/index.ts",
       "use": "@vercel/node",
       "config": {
-        "includeFiles": "public/**"
+        "includeFiles": ["server/**", "public/**"]
       }
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "api/index.js"
+      "dest": "api/index.ts"
     }
   ]
 }

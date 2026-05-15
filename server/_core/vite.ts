@@ -54,7 +54,22 @@ export async function setupVite(app: Express, server: Server) {
 }
 
 export function serveStatic(app: Express) {
-  const distPath = path.join(process.cwd(), "public");
+  // In Vercel, __dirname points to the API handler location
+  // The public directory should be at the same level as api/
+  let distPath = path.join(__dirname, "../../public");
+  
+  // Fallback to process.cwd() if __dirname approach doesn't work
+  if (!fs.existsSync(distPath)) {
+    distPath = path.join(process.cwd(), "public");
+  }
+  
+  // Final fallback for Vercel environment
+  if (!fs.existsSync(distPath)) {
+    distPath = "/var/task/public";
+  }
+  
+  console.log(`[serveStatic] Using distPath: ${distPath}, exists: ${fs.existsSync(distPath)}`);
+  
   if (!fs.existsSync(distPath)) {
     console.error(
       `Could not find the build directory: ${distPath}, make sure to build the client first`
@@ -65,6 +80,11 @@ export function serveStatic(app: Express) {
 
   // fall through to index.html if the file doesn't exist
   app.use("*", (_req, res) => {
-    res.sendFile(path.join(distPath, "index.html"));
+    const indexPath = path.join(distPath, "index.html");
+    if (fs.existsSync(indexPath)) {
+      res.sendFile(indexPath);
+    } else {
+      res.status(404).json({ error: "index.html not found" });
+    }
   });
 }
