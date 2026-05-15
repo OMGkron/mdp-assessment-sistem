@@ -1,19 +1,16 @@
 {
   "version": 2,
-  "installCommand": "npm install -g pnpm && pnpm install",
+  "installCommand": "pnpm install",
   "buildCommand": "pnpm build",
+  "outputDirectory": "public",
   "env": {
     "NODE_ENV": "production"
   },
-  "builds": [
-    {
-      "src": "api/index.ts",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": ["server/**", "public/**"]
-      }
+  "functions": {
+    "api/index.ts": {
+      "includeFiles": "server/**"
     }
-  ],
+  },
   "routes": [
     {
       "src": "/(.*)",
