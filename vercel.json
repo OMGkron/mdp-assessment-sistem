@@ -1,4 +1,5 @@
 {
+  "outputDirectory": "dist/public",
   "installCommand": "corepack enable && pnpm install",
   "rewrites": [
     {
