@@ -45,6 +45,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return saved ? parseInt(saved, 10) : DEFAULT_WIDTH;
   });
   const { loading, user } = useAuth();
+  const [, setLocation] = useLocation();
 
   useEffect(() => {
     localStorage.setItem(SIDEBAR_WIDTH_KEY, sidebarWidth.toString());
@@ -69,7 +70,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
           <Button
             onClick={() => { 
-                window.location.href = import.meta.env.DEV ? "/api/auth/dev-login" : getLoginUrl(); 
+                setLocation("/login"); 
             }}
             size="lg"
             className="w-full"

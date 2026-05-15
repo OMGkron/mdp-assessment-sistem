@@ -11,11 +11,13 @@ import ChatbotPage from "./pages/ChatbotPage";
 import PesertaPage from "./pages/PesertaPage";
 import LaporanPage from "./pages/LaporanPage";
 import DashboardLayout from "./components/DashboardLayout";
+import LoginPage from "./pages/LoginPage";
 
 function Router() {
   return (
     <DashboardLayout>
       <Switch>
+        <Route path="/login" component={LoginPage} />
         <Route path="/" component={Dashboard} />
         <Route path="/peserta" component={PesertaPage} />
         <Route path="/laporan" component={LaporanPage} />

@@ -659,6 +659,9 @@ var init_sdk = __esm({
         const signedInAt = /* @__PURE__ */ new Date();
         let user = await getUserByOpenId(sessionUserId);
         if (!user) {
+          if (sessionUserId.startsWith("local_")) {
+            throw ForbiddenError("Local user not found in database");
+          }
           try {
             const userInfo = await this.getUserInfoWithJwt(sessionCookie ?? "");
             await upsertUser({
@@ -686,6 +689,166 @@ var init_sdk = __esm({
     };
     CRON_OPEN_ID_PREFIX = "cron_";
     sdk = new SDKServer();
+  }
+});
+
+// vite.config.ts
+var vite_config_exports = {};
+__export(vite_config_exports, {
+  default: () => vite_config_default
+});
+import { jsxLocPlugin } from "@builder.io/vite-plugin-jsx-loc";
+import tailwindcss from "@tailwindcss/vite";
+import react from "@vitejs/plugin-react";
+import fs from "node:fs";
+import path from "node:path";
+import { defineConfig } from "vite";
+import { vitePluginManusRuntime } from "vite-plugin-manus-runtime";
+function ensureLogDir() {
+  if (!fs.existsSync(LOG_DIR)) {
+    fs.mkdirSync(LOG_DIR, { recursive: true });
+  }
+}
+function trimLogFile(logPath, maxSize) {
+  try {
+    if (!fs.existsSync(logPath) || fs.statSync(logPath).size <= maxSize) {
+      return;
+    }
+    const lines = fs.readFileSync(logPath, "utf-8").split("\n");
+    const keptLines = [];
+    let keptBytes = 0;
+    const targetSize = TRIM_TARGET_BYTES;
+    for (let i = lines.length - 1; i >= 0; i--) {
+      const lineBytes = Buffer.byteLength(`${lines[i]}
+`, "utf-8");
+      if (keptBytes + lineBytes > targetSize) break;
+      keptLines.unshift(lines[i]);
+      keptBytes += lineBytes;
+    }
+    fs.writeFileSync(logPath, keptLines.join("\n"), "utf-8");
+  } catch {
+  }
+}
+function writeToLogFile(source, entries) {
+  if (entries.length === 0) return;
+  ensureLogDir();
+  const logPath = path.join(LOG_DIR, `${source}.log`);
+  const lines = entries.map((entry) => {
+    const ts = (/* @__PURE__ */ new Date()).toISOString();
+    return `[${ts}] ${JSON.stringify(entry)}`;
+  });
+  fs.appendFileSync(logPath, `${lines.join("\n")}
+`, "utf-8");
+  trimLogFile(logPath, MAX_LOG_SIZE_BYTES);
+}
+function vitePluginManusDebugCollector() {
+  return {
+    name: "manus-debug-collector",
+    transformIndexHtml(html) {
+      if (process.env.NODE_ENV === "production") {
+        return html;
+      }
+      return {
+        html,
+        tags: [
+          {
+            tag: "script",
+            attrs: {
+              src: "/__manus__/debug-collector.js",
+              defer: true
+            },
+            injectTo: "head"
+          }
+        ]
+      };
+    },
+    configureServer(server) {
+      server.middlewares.use("/__manus__/logs", (req, res, next) => {
+        if (req.method !== "POST") {
+          return next();
+        }
+        const handlePayload = (payload) => {
+          if (payload.consoleLogs?.length > 0) {
+            writeToLogFile("browserConsole", payload.consoleLogs);
+          }
+          if (payload.networkRequests?.length > 0) {
+            writeToLogFile("networkRequests", payload.networkRequests);
+          }
+          if (payload.sessionEvents?.length > 0) {
+            writeToLogFile("sessionReplay", payload.sessionEvents);
+          }
+          res.writeHead(200, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ success: true }));
+        };
+        const reqBody = req.body;
+        if (reqBody && typeof reqBody === "object") {
+          try {
+            handlePayload(reqBody);
+          } catch (e) {
+            res.writeHead(400, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ success: false, error: String(e) }));
+          }
+          return;
+        }
+        let body = "";
+        req.on("data", (chunk) => {
+          body += chunk.toString();
+        });
+        req.on("end", () => {
+          try {
+            const payload = JSON.parse(body);
+            handlePayload(payload);
+          } catch (e) {
+            res.writeHead(400, { "Content-Type": "application/json" });
+            res.end(JSON.stringify({ success: false, error: String(e) }));
+          }
+        });
+      });
+    }
+  };
+}
+var PROJECT_ROOT, LOG_DIR, MAX_LOG_SIZE_BYTES, TRIM_TARGET_BYTES, plugins, vite_config_default;
+var init_vite_config = __esm({
+  "vite.config.ts"() {
+    "use strict";
+    PROJECT_ROOT = import.meta.dirname;
+    LOG_DIR = path.join(PROJECT_ROOT, ".manus-logs");
+    MAX_LOG_SIZE_BYTES = 1 * 1024 * 1024;
+    TRIM_TARGET_BYTES = Math.floor(MAX_LOG_SIZE_BYTES * 0.6);
+    plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginManusRuntime(), vitePluginManusDebugCollector()];
+    vite_config_default = defineConfig({
+      plugins,
+      resolve: {
+        alias: {
+          "@": path.resolve(import.meta.dirname, "client", "src"),
+          "@shared": path.resolve(import.meta.dirname, "shared"),
+          "@assets": path.resolve(import.meta.dirname, "attached_assets")
+        }
+      },
+      envDir: path.resolve(import.meta.dirname),
+      root: path.resolve(import.meta.dirname, "client"),
+      publicDir: path.resolve(import.meta.dirname, "client", "public"),
+      build: {
+        outDir: path.resolve(import.meta.dirname, "dist/public"),
+        emptyOutDir: true
+      },
+      server: {
+        host: true,
+        allowedHosts: [
+          ".manuspre.computer",
+          ".manus.computer",
+          ".manus-asia.computer",
+          ".manuscomputer.ai",
+          ".manusvm.computer",
+          "localhost",
+          "127.0.0.1"
+        ],
+        fs: {
+          strict: true,
+          deny: ["**/.*"]
+        }
+      }
+    });
   }
 });
 
@@ -1555,167 +1718,16 @@ import express from "express";
 import fs2 from "fs";
 import { nanoid } from "nanoid";
 import path2 from "path";
-import { createServer as createViteServer } from "vite";
-
-// vite.config.ts
-import { jsxLocPlugin } from "@builder.io/vite-plugin-jsx-loc";
-import tailwindcss from "@tailwindcss/vite";
-import react from "@vitejs/plugin-react";
-import fs from "node:fs";
-import path from "node:path";
-import { defineConfig } from "vite";
-import { vitePluginManusRuntime } from "vite-plugin-manus-runtime";
-var PROJECT_ROOT = import.meta.dirname;
-var LOG_DIR = path.join(PROJECT_ROOT, ".manus-logs");
-var MAX_LOG_SIZE_BYTES = 1 * 1024 * 1024;
-var TRIM_TARGET_BYTES = Math.floor(MAX_LOG_SIZE_BYTES * 0.6);
-function ensureLogDir() {
-  if (!fs.existsSync(LOG_DIR)) {
-    fs.mkdirSync(LOG_DIR, { recursive: true });
-  }
-}
-function trimLogFile(logPath, maxSize) {
-  try {
-    if (!fs.existsSync(logPath) || fs.statSync(logPath).size <= maxSize) {
-      return;
-    }
-    const lines = fs.readFileSync(logPath, "utf-8").split("\n");
-    const keptLines = [];
-    let keptBytes = 0;
-    const targetSize = TRIM_TARGET_BYTES;
-    for (let i = lines.length - 1; i >= 0; i--) {
-      const lineBytes = Buffer.byteLength(`${lines[i]}
-`, "utf-8");
-      if (keptBytes + lineBytes > targetSize) break;
-      keptLines.unshift(lines[i]);
-      keptBytes += lineBytes;
-    }
-    fs.writeFileSync(logPath, keptLines.join("\n"), "utf-8");
-  } catch {
-  }
-}
-function writeToLogFile(source, entries) {
-  if (entries.length === 0) return;
-  ensureLogDir();
-  const logPath = path.join(LOG_DIR, `${source}.log`);
-  const lines = entries.map((entry) => {
-    const ts = (/* @__PURE__ */ new Date()).toISOString();
-    return `[${ts}] ${JSON.stringify(entry)}`;
-  });
-  fs.appendFileSync(logPath, `${lines.join("\n")}
-`, "utf-8");
-  trimLogFile(logPath, MAX_LOG_SIZE_BYTES);
-}
-function vitePluginManusDebugCollector() {
-  return {
-    name: "manus-debug-collector",
-    transformIndexHtml(html) {
-      if (process.env.NODE_ENV === "production") {
-        return html;
-      }
-      return {
-        html,
-        tags: [
-          {
-            tag: "script",
-            attrs: {
-              src: "/__manus__/debug-collector.js",
-              defer: true
-            },
-            injectTo: "head"
-          }
-        ]
-      };
-    },
-    configureServer(server) {
-      server.middlewares.use("/__manus__/logs", (req, res, next) => {
-        if (req.method !== "POST") {
-          return next();
-        }
-        const handlePayload = (payload) => {
-          if (payload.consoleLogs?.length > 0) {
-            writeToLogFile("browserConsole", payload.consoleLogs);
-          }
-          if (payload.networkRequests?.length > 0) {
-            writeToLogFile("networkRequests", payload.networkRequests);
-          }
-          if (payload.sessionEvents?.length > 0) {
-            writeToLogFile("sessionReplay", payload.sessionEvents);
-          }
-          res.writeHead(200, { "Content-Type": "application/json" });
-          res.end(JSON.stringify({ success: true }));
-        };
-        const reqBody = req.body;
-        if (reqBody && typeof reqBody === "object") {
-          try {
-            handlePayload(reqBody);
-          } catch (e) {
-            res.writeHead(400, { "Content-Type": "application/json" });
-            res.end(JSON.stringify({ success: false, error: String(e) }));
-          }
-          return;
-        }
-        let body = "";
-        req.on("data", (chunk) => {
-          body += chunk.toString();
-        });
-        req.on("end", () => {
-          try {
-            const payload = JSON.parse(body);
-            handlePayload(payload);
-          } catch (e) {
-            res.writeHead(400, { "Content-Type": "application/json" });
-            res.end(JSON.stringify({ success: false, error: String(e) }));
-          }
-        });
-      });
-    }
-  };
-}
-var plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginManusRuntime(), vitePluginManusDebugCollector()];
-var vite_config_default = defineConfig({
-  plugins,
-  resolve: {
-    alias: {
-      "@": path.resolve(import.meta.dirname, "client", "src"),
-      "@shared": path.resolve(import.meta.dirname, "shared"),
-      "@assets": path.resolve(import.meta.dirname, "attached_assets")
-    }
-  },
-  envDir: path.resolve(import.meta.dirname),
-  root: path.resolve(import.meta.dirname, "client"),
-  publicDir: path.resolve(import.meta.dirname, "client", "public"),
-  build: {
-    outDir: path.resolve(import.meta.dirname, "dist/public"),
-    emptyOutDir: true
-  },
-  server: {
-    host: true,
-    allowedHosts: [
-      ".manuspre.computer",
-      ".manus.computer",
-      ".manus-asia.computer",
-      ".manuscomputer.ai",
-      ".manusvm.computer",
-      "localhost",
-      "127.0.0.1"
-    ],
-    fs: {
-      strict: true,
-      deny: ["**/.*"]
-    }
-  }
-});
-
-// server/_core/vite.ts
 async function setupVite(app, server) {
   const serverOptions = {
     middlewareMode: true,
     hmr: { server },
     allowedHosts: true
   };
+  const { createServer: createViteServer } = await import("vite");
+  const viteConfig = (await Promise.resolve().then(() => (init_vite_config(), vite_config_exports))).default;
   const vite = await createViteServer({
-    ...vite_config_default,
+    ...viteConfig,
     configFile: false,
     server: serverOptions,
     appType: "custom"
@@ -1802,6 +1814,40 @@ async function createApp() {
     const cookieOptions = getSessionCookieOptions2(req);
     res.cookie(COOKIE_NAME2, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS2 });
     res.redirect("/");
+  });
+  app.post("/api/auth/local-login", async (req, res) => {
+    try {
+      const { name, role } = req.body;
+      if (!name) {
+        res.status(400).json({ error: "Name is required" });
+        return;
+      }
+      const { COOKIE_NAME: COOKIE_NAME2, ONE_YEAR_MS: ONE_YEAR_MS2 } = await Promise.resolve().then(() => (init_const(), const_exports));
+      const { sdk: sdk2 } = await Promise.resolve().then(() => (init_sdk(), sdk_exports));
+      const { getSessionCookieOptions: getSessionCookieOptions2 } = await Promise.resolve().then(() => (init_cookies(), cookies_exports));
+      const { upsertUser: upsertUser2 } = await Promise.resolve().then(() => (init_db(), db_exports));
+      const openId = `local_${name.toLowerCase().replace(/[^a-z0-9]/g, "_")}`;
+      const userRole = role === "admin" ? "admin" : "user";
+      const localUser = {
+        openId,
+        name,
+        email: `${openId}@example.com`,
+        loginMethod: "local",
+        lastSignedIn: /* @__PURE__ */ new Date(),
+        role: userRole
+      };
+      await upsertUser2(localUser);
+      const sessionToken = await sdk2.createSessionToken(localUser.openId, {
+        name: localUser.name,
+        expiresInMs: ONE_YEAR_MS2
+      });
+      const cookieOptions = getSessionCookieOptions2(req);
+      res.cookie(COOKIE_NAME2, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS2 });
+      res.status(200).json({ success: true, user: localUser });
+    } catch (e) {
+      console.error("Local login failed", e);
+      res.status(500).json({ error: "Local login failed" });
+    }
   });
   app.use(
     "/api/trpc",

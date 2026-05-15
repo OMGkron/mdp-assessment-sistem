@@ -65,6 +65,50 @@ export async function createApp() {
     res.redirect("/");
   });
 
+  // Custom Local Login Flow
+  app.post("/api/auth/local-login", async (req: express.Request, res: express.Response) => {
+    try {
+      const { name, role } = req.body;
+      if (!name) {
+        res.status(400).json({ error: "Name is required" });
+        return;
+      }
+      
+      const { COOKIE_NAME, ONE_YEAR_MS } = await import("@shared/const");
+      const { sdk } = await import("./sdk");
+      const { getSessionCookieOptions } = await import("./cookies");
+      const { upsertUser } = await import("../db");
+
+      // Generate a deterministic stable ID for this user Name so they can return
+      const openId = `local_${name.toLowerCase().replace(/[^a-z0-9]/g, "_")}`;
+      
+      const userRole: "admin" | "user" = role === "admin" ? "admin" : "user";
+      
+      const localUser = {
+        openId,
+        name: name,
+        email: `${openId}@example.com`,
+        loginMethod: "local",
+        lastSignedIn: new Date(),
+        role: userRole,
+      };
+
+      await upsertUser(localUser);
+
+      const sessionToken = await sdk.createSessionToken(localUser.openId, {
+        name: localUser.name,
+        expiresInMs: ONE_YEAR_MS,
+      });
+
+      const cookieOptions = getSessionCookieOptions(req as any);
+      res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+      res.status(200).json({ success: true, user: localUser });
+    } catch (e: any) {
+      console.error("Local login failed", e);
+      res.status(500).json({ error: "Local login failed" });
+    }
+  });
+
   // tRPC API
   app.use(
     "/api/trpc",
