@@ -30,24 +30,21 @@ var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__ge
 ));
 var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
-// shared/const.ts
-var const_exports = {};
-__export(const_exports, {
-  AXIOS_TIMEOUT_MS: () => AXIOS_TIMEOUT_MS,
-  COOKIE_NAME: () => COOKIE_NAME,
-  NOT_ADMIN_ERR_MSG: () => NOT_ADMIN_ERR_MSG,
-  ONE_YEAR_MS: () => ONE_YEAR_MS,
-  UNAUTHED_ERR_MSG: () => UNAUTHED_ERR_MSG
-});
-var COOKIE_NAME, ONE_YEAR_MS, AXIOS_TIMEOUT_MS, UNAUTHED_ERR_MSG, NOT_ADMIN_ERR_MSG;
-var init_const = __esm({
-  "shared/const.ts"() {
+// server/_core/env.ts
+var ENV;
+var init_env = __esm({
+  "server/_core/env.ts"() {
     "use strict";
-    COOKIE_NAME = "app_session_id";
-    ONE_YEAR_MS = 1e3 * 60 * 60 * 24 * 365;
-    AXIOS_TIMEOUT_MS = 3e4;
-    UNAUTHED_ERR_MSG = "Please login (10001)";
-    NOT_ADMIN_ERR_MSG = "You do not have required permission (10002)";
+    ENV = {
+      appId: process.env.VITE_APP_ID ?? "",
+      cookieSecret: process.env.JWT_SECRET ?? "",
+      databaseUrl: process.env.DATABASE_URL ?? "",
+      oAuthServerUrl: process.env.OAUTH_SERVER_URL ?? "",
+      ownerOpenId: process.env.OWNER_OPEN_ID ?? "",
+      isProduction: process.env.NODE_ENV === "production",
+      forgeApiUrl: process.env.BUILT_IN_FORGE_API_URL ?? "",
+      forgeApiKey: process.env.BUILT_IN_FORGE_API_KEY ?? ""
+    };
   }
 });
 
@@ -120,24 +117,6 @@ var init_schema = __esm({
       actionPlan: (0, import_pg_core.text)("actionPlan"),
       createdAt: (0, import_pg_core.timestamp)("createdAt").defaultNow().notNull()
     });
-  }
-});
-
-// server/_core/env.ts
-var ENV;
-var init_env = __esm({
-  "server/_core/env.ts"() {
-    "use strict";
-    ENV = {
-      appId: process.env.VITE_APP_ID ?? "",
-      cookieSecret: process.env.JWT_SECRET ?? "",
-      databaseUrl: process.env.DATABASE_URL ?? "",
-      oAuthServerUrl: process.env.OAUTH_SERVER_URL ?? "",
-      ownerOpenId: process.env.OWNER_OPEN_ID ?? "",
-      isProduction: process.env.NODE_ENV === "production",
-      forgeApiUrl: process.env.BUILT_IN_FORGE_API_URL ?? "",
-      forgeApiKey: process.env.BUILT_IN_FORGE_API_KEY ?? ""
-    };
   }
 });
 
@@ -403,308 +382,6 @@ var init_db = __esm({
   }
 });
 
-// server/_core/cookies.ts
-var cookies_exports = {};
-__export(cookies_exports, {
-  getSessionCookieOptions: () => getSessionCookieOptions
-});
-function isSecureRequest(req) {
-  if (req.protocol === "https") return true;
-  const forwardedProto = req.headers["x-forwarded-proto"];
-  if (!forwardedProto) return false;
-  const protoList = Array.isArray(forwardedProto) ? forwardedProto : forwardedProto.split(",");
-  return protoList.some((proto) => proto.trim().toLowerCase() === "https");
-}
-function getSessionCookieOptions(req) {
-  const secure = isSecureRequest(req);
-  return {
-    httpOnly: true,
-    path: "/",
-    sameSite: secure ? "none" : "lax",
-    secure
-  };
-}
-var init_cookies = __esm({
-  "server/_core/cookies.ts"() {
-    "use strict";
-  }
-});
-
-// shared/_core/errors.ts
-var HttpError, ForbiddenError;
-var init_errors = __esm({
-  "shared/_core/errors.ts"() {
-    "use strict";
-    HttpError = class extends Error {
-      constructor(statusCode, message) {
-        super(message);
-        this.statusCode = statusCode;
-        this.name = "HttpError";
-      }
-    };
-    ForbiddenError = (msg) => new HttpError(403, msg);
-  }
-});
-
-// server/_core/sdk.ts
-var sdk_exports = {};
-__export(sdk_exports, {
-  sdk: () => sdk
-});
-function buildCronUser(userInfo) {
-  const now = /* @__PURE__ */ new Date();
-  return {
-    id: -1,
-    openId: userInfo.openId,
-    name: userInfo.name || "Manus Scheduled Task",
-    email: null,
-    loginMethod: null,
-    role: "user",
-    createdAt: now,
-    updatedAt: now,
-    lastSignedIn: now,
-    taskUid: userInfo.taskUid ?? void 0,
-    isCron: true
-  };
-}
-var import_axios, import_cookie, import_jose, isNonEmptyString, EXCHANGE_TOKEN_PATH, GET_USER_INFO_PATH, GET_USER_INFO_WITH_JWT_PATH, OAuthService, createOAuthHttpClient, SDKServer, CRON_OPEN_ID_PREFIX, sdk;
-var init_sdk = __esm({
-  "server/_core/sdk.ts"() {
-    "use strict";
-    init_const();
-    init_errors();
-    import_axios = __toESM(require("axios"), 1);
-    import_cookie = require("cookie");
-    import_jose = require("jose");
-    init_db();
-    init_env();
-    isNonEmptyString = (value) => typeof value === "string" && value.length > 0;
-    EXCHANGE_TOKEN_PATH = `/webdev.v1.WebDevAuthPublicService/ExchangeToken`;
-    GET_USER_INFO_PATH = `/webdev.v1.WebDevAuthPublicService/GetUserInfo`;
-    GET_USER_INFO_WITH_JWT_PATH = `/webdev.v1.WebDevAuthPublicService/GetUserInfoWithJwt`;
-    OAuthService = class {
-      constructor(client) {
-        this.client = client;
-        console.log("[OAuth] Initialized with baseURL:", ENV.oAuthServerUrl);
-        if (!ENV.oAuthServerUrl) {
-          console.error(
-            "[OAuth] ERROR: OAUTH_SERVER_URL is not configured! Set OAUTH_SERVER_URL environment variable."
-          );
-        }
-      }
-      decodeState(state) {
-        const redirectUri = atob(state);
-        return redirectUri;
-      }
-      async getTokenByCode(code, state) {
-        const payload = {
-          clientId: ENV.appId,
-          grantType: "authorization_code",
-          code,
-          redirectUri: this.decodeState(state)
-        };
-        const { data } = await this.client.post(
-          EXCHANGE_TOKEN_PATH,
-          payload
-        );
-        return data;
-      }
-      async getUserInfoByToken(token) {
-        const { data } = await this.client.post(
-          GET_USER_INFO_PATH,
-          {
-            accessToken: token.accessToken
-          }
-        );
-        return data;
-      }
-    };
-    createOAuthHttpClient = () => import_axios.default.create({
-      baseURL: ENV.oAuthServerUrl,
-      timeout: AXIOS_TIMEOUT_MS
-    });
-    SDKServer = class {
-      client;
-      oauthService;
-      constructor(client = createOAuthHttpClient()) {
-        this.client = client;
-        this.oauthService = new OAuthService(this.client);
-      }
-      deriveLoginMethod(platforms, fallback) {
-        if (fallback && fallback.length > 0) return fallback;
-        if (!Array.isArray(platforms) || platforms.length === 0) return null;
-        const set = new Set(
-          platforms.filter((p) => typeof p === "string")
-        );
-        if (set.has("REGISTERED_PLATFORM_EMAIL")) return "email";
-        if (set.has("REGISTERED_PLATFORM_GOOGLE")) return "google";
-        if (set.has("REGISTERED_PLATFORM_APPLE")) return "apple";
-        if (set.has("REGISTERED_PLATFORM_MICROSOFT") || set.has("REGISTERED_PLATFORM_AZURE"))
-          return "microsoft";
-        if (set.has("REGISTERED_PLATFORM_GITHUB")) return "github";
-        const first = Array.from(set)[0];
-        return first ? first.toLowerCase() : null;
-      }
-      /**
-       * Exchange OAuth authorization code for access token
-       * @example
-       * const tokenResponse = await sdk.exchangeCodeForToken(code, state);
-       */
-      async exchangeCodeForToken(code, state) {
-        return this.oauthService.getTokenByCode(code, state);
-      }
-      /**
-       * Get user information using access token
-       * @example
-       * const userInfo = await sdk.getUserInfo(tokenResponse.accessToken);
-       */
-      async getUserInfo(accessToken) {
-        const data = await this.oauthService.getUserInfoByToken({
-          accessToken
-        });
-        const loginMethod = this.deriveLoginMethod(
-          data?.platforms,
-          data?.platform ?? data.platform ?? null
-        );
-        return {
-          ...data,
-          platform: loginMethod,
-          loginMethod
-        };
-      }
-      parseCookies(cookieHeader) {
-        if (!cookieHeader) {
-          return /* @__PURE__ */ new Map();
-        }
-        const parsed = (0, import_cookie.parse)(cookieHeader);
-        return new Map(Object.entries(parsed));
-      }
-      getSessionSecret() {
-        const secret = ENV.cookieSecret;
-        return new TextEncoder().encode(secret);
-      }
-      /**
-       * Create a session token for a Manus user openId
-       * @example
-       * const sessionToken = await sdk.createSessionToken(userInfo.openId);
-       */
-      async createSessionToken(openId, options = {}) {
-        return this.signSession(
-          {
-            openId,
-            appId: ENV.appId,
-            name: options.name || ""
-          },
-          options
-        );
-      }
-      async signSession(payload, options = {}) {
-        const issuedAt = Date.now();
-        const expiresInMs = options.expiresInMs ?? ONE_YEAR_MS;
-        const expirationSeconds = Math.floor((issuedAt + expiresInMs) / 1e3);
-        const secretKey = this.getSessionSecret();
-        return new import_jose.SignJWT({
-          openId: payload.openId,
-          appId: payload.appId,
-          name: payload.name
-        }).setProtectedHeader({ alg: "HS256", typ: "JWT" }).setExpirationTime(expirationSeconds).sign(secretKey);
-      }
-      async verifySession(cookieValue) {
-        if (!cookieValue) {
-          console.warn("[Auth] Missing session cookie");
-          return null;
-        }
-        try {
-          const secretKey = this.getSessionSecret();
-          const { payload } = await (0, import_jose.jwtVerify)(cookieValue, secretKey, {
-            algorithms: ["HS256"]
-          });
-          const { openId, appId, name } = payload;
-          if (!isNonEmptyString(openId) || !isNonEmptyString(appId) || !isNonEmptyString(name)) {
-            console.warn("[Auth] Session payload missing required fields");
-            return null;
-          }
-          return {
-            openId,
-            appId,
-            name
-          };
-        } catch (error) {
-          console.warn("[Auth] Session verification failed", String(error));
-          return null;
-        }
-      }
-      async getUserInfoWithJwt(jwtToken) {
-        const payload = {
-          jwtToken,
-          projectId: ENV.appId
-        };
-        const { data } = await this.client.post(
-          GET_USER_INFO_WITH_JWT_PATH,
-          payload
-        );
-        const loginMethod = this.deriveLoginMethod(
-          data?.platforms,
-          data?.platform ?? data.platform ?? null
-        );
-        return {
-          ...data,
-          platform: loginMethod,
-          loginMethod
-        };
-      }
-      async authenticateRequest(req) {
-        const cookies = this.parseCookies(req.headers.cookie);
-        const sessionCookie = cookies.get(COOKIE_NAME);
-        const session = await this.verifySession(sessionCookie);
-        if (!session) {
-          throw ForbiddenError("Invalid session cookie");
-        }
-        if (session.openId.startsWith(CRON_OPEN_ID_PREFIX)) {
-          const userInfo = await this.getUserInfoWithJwt(sessionCookie ?? "");
-          const taskUid = userInfo.taskUid ?? null;
-          if (!taskUid) {
-            throw ForbiddenError("Cron session missing task_uid");
-          }
-          return buildCronUser(userInfo);
-        }
-        const sessionUserId = session.openId;
-        const signedInAt = /* @__PURE__ */ new Date();
-        let user = await getUserByOpenId(sessionUserId);
-        if (!user) {
-          if (sessionUserId.startsWith("local_")) {
-            throw ForbiddenError("Local user not found in database");
-          }
-          try {
-            const userInfo = await this.getUserInfoWithJwt(sessionCookie ?? "");
-            await upsertUser({
-              openId: userInfo.openId,
-              name: userInfo.name || null,
-              email: userInfo.email ?? null,
-              loginMethod: userInfo.loginMethod ?? userInfo.platform ?? null,
-              lastSignedIn: signedInAt
-            });
-            user = await getUserByOpenId(userInfo.openId);
-          } catch (error) {
-            console.error("[Auth] Failed to sync user from OAuth:", error);
-            throw ForbiddenError("Failed to sync user info");
-          }
-        }
-        if (!user) {
-          throw ForbiddenError("User not found");
-        }
-        await upsertUser({
-          openId: user.openId,
-          lastSignedIn: signedInAt
-        });
-        return user;
-      }
-    };
-    CRON_OPEN_ID_PREFIX = "cron_";
-    sdk = new SDKServer();
-  }
-});
-
 // vite.config.ts
 var vite_config_exports = {};
 __export(vite_config_exports, {
@@ -883,51 +560,6 @@ var import_http = require("http");
 var import_net = __toESM(require("net"), 1);
 var import_express3 = require("@trpc/server/adapters/express");
 
-// server/_core/oauth.ts
-init_const();
-init_db();
-init_cookies();
-init_sdk();
-function getQueryParam(req, key) {
-  const value = req.query[key];
-  return typeof value === "string" ? value : void 0;
-}
-function registerOAuthRoutes(app) {
-  app.get("/api/oauth/callback", async (req, res) => {
-    const code = getQueryParam(req, "code");
-    const state = getQueryParam(req, "state");
-    if (!code || !state) {
-      res.status(400).json({ error: "code and state are required" });
-      return;
-    }
-    try {
-      const tokenResponse = await sdk.exchangeCodeForToken(code, state);
-      const userInfo = await sdk.getUserInfo(tokenResponse.accessToken);
-      if (!userInfo.openId) {
-        res.status(400).json({ error: "openId missing from user info" });
-        return;
-      }
-      await upsertUser({
-        openId: userInfo.openId,
-        name: userInfo.name || null,
-        email: userInfo.email ?? null,
-        loginMethod: userInfo.loginMethod ?? userInfo.platform ?? null,
-        lastSignedIn: /* @__PURE__ */ new Date()
-      });
-      const sessionToken = await sdk.createSessionToken(userInfo.openId, {
-        name: userInfo.name || "",
-        expiresInMs: ONE_YEAR_MS
-      });
-      const cookieOptions = getSessionCookieOptions(req);
-      res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
-      res.redirect(302, "/");
-    } catch (error) {
-      console.error("[OAuth] Callback failed", error);
-      res.status(500).json({ error: "OAuth callback failed" });
-    }
-  });
-}
-
 // server/_core/storageProxy.ts
 init_env();
 function registerStorageProxy(app) {
@@ -972,8 +604,31 @@ function registerStorageProxy(app) {
 
 // server/routers.ts
 var import_zod3 = require("zod");
-init_const();
-init_cookies();
+
+// shared/const.ts
+var COOKIE_NAME = "app_session_id";
+var ONE_YEAR_MS = 1e3 * 60 * 60 * 24 * 365;
+var AXIOS_TIMEOUT_MS = 3e4;
+var UNAUTHED_ERR_MSG = "Please login (10001)";
+var NOT_ADMIN_ERR_MSG = "You do not have required permission (10002)";
+
+// server/_core/cookies.ts
+function isSecureRequest(req) {
+  if (req.protocol === "https") return true;
+  const forwardedProto = req.headers["x-forwarded-proto"];
+  if (!forwardedProto) return false;
+  const protoList = Array.isArray(forwardedProto) ? forwardedProto : forwardedProto.split(",");
+  return protoList.some((proto) => proto.trim().toLowerCase() === "https");
+}
+function getSessionCookieOptions(req) {
+  const secure = isSecureRequest(req);
+  return {
+    httpOnly: true,
+    path: "/",
+    sameSite: secure ? "none" : "lax",
+    secure
+  };
+}
 
 // server/_core/systemRouter.ts
 var import_zod = require("zod");
@@ -984,7 +639,7 @@ init_env();
 var TITLE_MAX_LENGTH = 1200;
 var CONTENT_MAX_LENGTH = 2e4;
 var trimValue = (value) => value.trim();
-var isNonEmptyString2 = (value) => typeof value === "string" && value.trim().length > 0;
+var isNonEmptyString = (value) => typeof value === "string" && value.trim().length > 0;
 var buildEndpointUrl = (baseUrl) => {
   const normalizedBase = baseUrl.endsWith("/") ? baseUrl : `${baseUrl}/`;
   return new URL(
@@ -993,13 +648,13 @@ var buildEndpointUrl = (baseUrl) => {
   ).toString();
 };
 var validatePayload = (input) => {
-  if (!isNonEmptyString2(input.title)) {
+  if (!isNonEmptyString(input.title)) {
     throw new import_server.TRPCError({
       code: "BAD_REQUEST",
       message: "Notification title is required."
     });
   }
-  if (!isNonEmptyString2(input.content)) {
+  if (!isNonEmptyString(input.content)) {
     throw new import_server.TRPCError({
       code: "BAD_REQUEST",
       message: "Notification content is required."
@@ -1062,7 +717,6 @@ async function notifyOwner(payload) {
 }
 
 // server/_core/trpc.ts
-init_const();
 var import_server2 = require("@trpc/server");
 var import_superjson = __toESM(require("superjson"), 1);
 var t = import_server2.initTRPC.context().create({
@@ -1721,8 +1375,264 @@ var appRouter = router({
   })
 });
 
+// shared/_core/errors.ts
+var HttpError = class extends Error {
+  constructor(statusCode, message) {
+    super(message);
+    this.statusCode = statusCode;
+    this.name = "HttpError";
+  }
+};
+var ForbiddenError = (msg) => new HttpError(403, msg);
+
+// server/_core/sdk.ts
+var import_axios = __toESM(require("axios"), 1);
+var import_cookie = require("cookie");
+var import_jose = require("jose");
+init_db();
+init_env();
+var isNonEmptyString2 = (value) => typeof value === "string" && value.length > 0;
+var EXCHANGE_TOKEN_PATH = `/webdev.v1.WebDevAuthPublicService/ExchangeToken`;
+var GET_USER_INFO_PATH = `/webdev.v1.WebDevAuthPublicService/GetUserInfo`;
+var GET_USER_INFO_WITH_JWT_PATH = `/webdev.v1.WebDevAuthPublicService/GetUserInfoWithJwt`;
+var OAuthService = class {
+  constructor(client) {
+    this.client = client;
+    console.log("[OAuth] Initialized with baseURL:", ENV.oAuthServerUrl);
+    if (!ENV.oAuthServerUrl) {
+      console.error(
+        "[OAuth] ERROR: OAUTH_SERVER_URL is not configured! Set OAUTH_SERVER_URL environment variable."
+      );
+    }
+  }
+  decodeState(state) {
+    const redirectUri = atob(state);
+    return redirectUri;
+  }
+  async getTokenByCode(code, state) {
+    const payload = {
+      clientId: ENV.appId,
+      grantType: "authorization_code",
+      code,
+      redirectUri: this.decodeState(state)
+    };
+    const { data } = await this.client.post(
+      EXCHANGE_TOKEN_PATH,
+      payload
+    );
+    return data;
+  }
+  async getUserInfoByToken(token) {
+    const { data } = await this.client.post(
+      GET_USER_INFO_PATH,
+      {
+        accessToken: token.accessToken
+      }
+    );
+    return data;
+  }
+};
+var createOAuthHttpClient = () => import_axios.default.create({
+  baseURL: ENV.oAuthServerUrl,
+  timeout: AXIOS_TIMEOUT_MS
+});
+var SDKServer = class {
+  client;
+  oauthService;
+  constructor(client = createOAuthHttpClient()) {
+    this.client = client;
+    this.oauthService = new OAuthService(this.client);
+  }
+  deriveLoginMethod(platforms, fallback) {
+    if (fallback && fallback.length > 0) return fallback;
+    if (!Array.isArray(platforms) || platforms.length === 0) return null;
+    const set = new Set(
+      platforms.filter((p) => typeof p === "string")
+    );
+    if (set.has("REGISTERED_PLATFORM_EMAIL")) return "email";
+    if (set.has("REGISTERED_PLATFORM_GOOGLE")) return "google";
+    if (set.has("REGISTERED_PLATFORM_APPLE")) return "apple";
+    if (set.has("REGISTERED_PLATFORM_MICROSOFT") || set.has("REGISTERED_PLATFORM_AZURE"))
+      return "microsoft";
+    if (set.has("REGISTERED_PLATFORM_GITHUB")) return "github";
+    const first = Array.from(set)[0];
+    return first ? first.toLowerCase() : null;
+  }
+  /**
+   * Exchange OAuth authorization code for access token
+   * @example
+   * const tokenResponse = await sdk.exchangeCodeForToken(code, state);
+   */
+  async exchangeCodeForToken(code, state) {
+    return this.oauthService.getTokenByCode(code, state);
+  }
+  /**
+   * Get user information using access token
+   * @example
+   * const userInfo = await sdk.getUserInfo(tokenResponse.accessToken);
+   */
+  async getUserInfo(accessToken) {
+    const data = await this.oauthService.getUserInfoByToken({
+      accessToken
+    });
+    const loginMethod = this.deriveLoginMethod(
+      data?.platforms,
+      data?.platform ?? data.platform ?? null
+    );
+    return {
+      ...data,
+      platform: loginMethod,
+      loginMethod
+    };
+  }
+  parseCookies(cookieHeader) {
+    if (!cookieHeader) {
+      return /* @__PURE__ */ new Map();
+    }
+    const parsed = (0, import_cookie.parse)(cookieHeader);
+    return new Map(Object.entries(parsed));
+  }
+  getSessionSecret() {
+    const secret = ENV.cookieSecret;
+    return new TextEncoder().encode(secret);
+  }
+  /**
+   * Create a session token for a Manus user openId
+   * @example
+   * const sessionToken = await sdk.createSessionToken(userInfo.openId);
+   */
+  async createSessionToken(openId, options = {}) {
+    return this.signSession(
+      {
+        openId,
+        appId: ENV.appId,
+        name: options.name || ""
+      },
+      options
+    );
+  }
+  async signSession(payload, options = {}) {
+    const issuedAt = Date.now();
+    const expiresInMs = options.expiresInMs ?? ONE_YEAR_MS;
+    const expirationSeconds = Math.floor((issuedAt + expiresInMs) / 1e3);
+    const secretKey = this.getSessionSecret();
+    return new import_jose.SignJWT({
+      openId: payload.openId,
+      appId: payload.appId,
+      name: payload.name
+    }).setProtectedHeader({ alg: "HS256", typ: "JWT" }).setExpirationTime(expirationSeconds).sign(secretKey);
+  }
+  async verifySession(cookieValue) {
+    if (!cookieValue) {
+      console.warn("[Auth] Missing session cookie");
+      return null;
+    }
+    try {
+      const secretKey = this.getSessionSecret();
+      const { payload } = await (0, import_jose.jwtVerify)(cookieValue, secretKey, {
+        algorithms: ["HS256"]
+      });
+      const { openId, appId, name } = payload;
+      if (!isNonEmptyString2(openId) || !isNonEmptyString2(appId) || !isNonEmptyString2(name)) {
+        console.warn("[Auth] Session payload missing required fields");
+        return null;
+      }
+      return {
+        openId,
+        appId,
+        name
+      };
+    } catch (error) {
+      console.warn("[Auth] Session verification failed", String(error));
+      return null;
+    }
+  }
+  async getUserInfoWithJwt(jwtToken) {
+    const payload = {
+      jwtToken,
+      projectId: ENV.appId
+    };
+    const { data } = await this.client.post(
+      GET_USER_INFO_WITH_JWT_PATH,
+      payload
+    );
+    const loginMethod = this.deriveLoginMethod(
+      data?.platforms,
+      data?.platform ?? data.platform ?? null
+    );
+    return {
+      ...data,
+      platform: loginMethod,
+      loginMethod
+    };
+  }
+  async authenticateRequest(req) {
+    const cookies = this.parseCookies(req.headers.cookie);
+    const sessionCookie = cookies.get(COOKIE_NAME);
+    const session = await this.verifySession(sessionCookie);
+    if (!session) {
+      throw ForbiddenError("Invalid session cookie");
+    }
+    if (session.openId.startsWith(CRON_OPEN_ID_PREFIX)) {
+      const userInfo = await this.getUserInfoWithJwt(sessionCookie ?? "");
+      const taskUid = userInfo.taskUid ?? null;
+      if (!taskUid) {
+        throw ForbiddenError("Cron session missing task_uid");
+      }
+      return buildCronUser(userInfo);
+    }
+    const sessionUserId = session.openId;
+    const signedInAt = /* @__PURE__ */ new Date();
+    let user = await getUserByOpenId(sessionUserId);
+    if (!user) {
+      if (sessionUserId.startsWith("local_")) {
+        throw ForbiddenError("Local user not found in database");
+      }
+      try {
+        const userInfo = await this.getUserInfoWithJwt(sessionCookie ?? "");
+        await upsertUser({
+          openId: userInfo.openId,
+          name: userInfo.name || null,
+          email: userInfo.email ?? null,
+          loginMethod: userInfo.loginMethod ?? userInfo.platform ?? null,
+          lastSignedIn: signedInAt
+        });
+        user = await getUserByOpenId(userInfo.openId);
+      } catch (error) {
+        console.error("[Auth] Failed to sync user from OAuth:", error);
+        throw ForbiddenError("Failed to sync user info");
+      }
+    }
+    if (!user) {
+      throw ForbiddenError("User not found");
+    }
+    await upsertUser({
+      openId: user.openId,
+      lastSignedIn: signedInAt
+    });
+    return user;
+  }
+};
+var CRON_OPEN_ID_PREFIX = "cron_";
+function buildCronUser(userInfo) {
+  const now = /* @__PURE__ */ new Date();
+  return {
+    id: -1,
+    openId: userInfo.openId,
+    name: userInfo.name || "Manus Scheduled Task",
+    email: null,
+    loginMethod: null,
+    role: "user",
+    createdAt: now,
+    updatedAt: now,
+    lastSignedIn: now,
+    taskUid: userInfo.taskUid ?? void 0,
+    isCron: true
+  };
+}
+var sdk = new SDKServer();
+
 // server/_core/context.ts
-init_sdk();
 async function createContext(opts) {
   let user = null;
   try {
@@ -1820,63 +1730,6 @@ async function createApp() {
   app.use(import_express2.default.json({ limit: "50mb" }));
   app.use(import_express2.default.urlencoded({ limit: "50mb", extended: true }));
   registerStorageProxy(app);
-  registerOAuthRoutes(app);
-  app.get("/api/auth/dev-login", async (req, res) => {
-    const { COOKIE_NAME: COOKIE_NAME2, ONE_YEAR_MS: ONE_YEAR_MS2 } = await Promise.resolve().then(() => (init_const(), const_exports));
-    const { sdk: sdk2 } = await Promise.resolve().then(() => (init_sdk(), sdk_exports));
-    const { getSessionCookieOptions: getSessionCookieOptions2 } = await Promise.resolve().then(() => (init_cookies(), cookies_exports));
-    const { upsertUser: upsertUser2 } = await Promise.resolve().then(() => (init_db(), db_exports));
-    const devUser = {
-      openId: "dev-admin-id",
-      name: "Developer Admin",
-      email: "dev@example.com",
-      loginMethod: "mock",
-      lastSignedIn: /* @__PURE__ */ new Date(),
-      role: "admin"
-    };
-    await upsertUser2(devUser);
-    const sessionToken = await sdk2.createSessionToken(devUser.openId, {
-      name: devUser.name,
-      expiresInMs: ONE_YEAR_MS2
-    });
-    const cookieOptions = getSessionCookieOptions2(req);
-    res.cookie(COOKIE_NAME2, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS2 });
-    res.redirect("/");
-  });
-  app.post("/api/auth/local-login", async (req, res) => {
-    try {
-      const { name, role } = req.body;
-      if (!name) {
-        res.status(400).json({ error: "Name is required" });
-        return;
-      }
-      const { COOKIE_NAME: COOKIE_NAME2, ONE_YEAR_MS: ONE_YEAR_MS2 } = await Promise.resolve().then(() => (init_const(), const_exports));
-      const { sdk: sdk2 } = await Promise.resolve().then(() => (init_sdk(), sdk_exports));
-      const { getSessionCookieOptions: getSessionCookieOptions2 } = await Promise.resolve().then(() => (init_cookies(), cookies_exports));
-      const { upsertUser: upsertUser2 } = await Promise.resolve().then(() => (init_db(), db_exports));
-      const openId = `local_${name.toLowerCase().replace(/[^a-z0-9]/g, "_")}`;
-      const userRole = role === "admin" ? "admin" : "user";
-      const localUser = {
-        openId,
-        name,
-        email: `${openId}@example.com`,
-        loginMethod: "local",
-        lastSignedIn: /* @__PURE__ */ new Date(),
-        role: userRole
-      };
-      await upsertUser2(localUser);
-      const sessionToken = await sdk2.createSessionToken(localUser.openId, {
-        name: localUser.name,
-        expiresInMs: ONE_YEAR_MS2
-      });
-      const cookieOptions = getSessionCookieOptions2(req);
-      res.cookie(COOKIE_NAME2, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS2 });
-      res.status(200).json({ success: true, user: localUser });
-    } catch (e) {
-      console.error("Local login failed", e);
-      res.status(500).json({ error: "Local login failed" });
-    }
-  });
   app.use(
     "/api/trpc",
     (0, import_express3.createExpressMiddleware)({
@@ -1884,6 +1737,12 @@ async function createApp() {
       createContext
     })
   );
+  app.get("/api/health", (_req, res) => {
+    res.status(200).json({
+      success: true,
+      message: "Server is running"
+    });
+  });
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);
   } else {
@@ -1891,18 +1750,22 @@ async function createApp() {
   }
   return { app, server };
 }
-async function startServer() {
+var startServer = async () => {
   const { server } = await createApp();
   const preferredPort = parseInt(process.env.PORT || "3000");
   const port = await findAvailablePort(preferredPort);
   if (port !== preferredPort) {
-    console.log(`Port ${preferredPort} is busy, using port ${port} instead`);
+    console.log(
+      `Port ${preferredPort} is busy, using port ${port} instead`
+    );
   }
   server.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}/`);
+    console.log(`Server running on http://localhost:${port}`);
   });
+};
+if (process.env.NODE_ENV !== "production") {
+  startServer().catch(console.error);
 }
-startServer().catch(console.error);
 
 // server/vercel.ts
 async function handler(req, res) {
