@@ -38,7 +38,7 @@ export async function createApp() {
   registerOAuthRoutes(app);
 
   // Dev login route - ONLY FOR DEVELOPMENT
-  app.get("/api/auth/dev-login", async (req, res) => {
+  app.get("/api/auth/dev-login", async (req: express.Request, res: express.Response) => {
     const { COOKIE_NAME, ONE_YEAR_MS } = await import("@shared/const");
     const { sdk } = await import("./sdk");
     const { getSessionCookieOptions } = await import("./cookies");
