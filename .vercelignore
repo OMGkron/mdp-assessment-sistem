@@ -1,0 +1,4 @@
+.manus-logs
+.env.local
+node_modules
+pnpm-lock.yaml
