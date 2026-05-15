@@ -1,5 +1,10 @@
+"use strict";
+var __create = Object.create;
 var __defProp = Object.defineProperty;
+var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
 var __getOwnPropNames = Object.getOwnPropertyNames;
+var __getProtoOf = Object.getPrototypeOf;
+var __hasOwnProp = Object.prototype.hasOwnProperty;
 var __esm = (fn, res) => function __init() {
   return fn && (res = (0, fn[__getOwnPropNames(fn)[0]])(fn = 0)), res;
 };
@@ -7,6 +12,23 @@ var __export = (target, all) => {
   for (var name in all)
     __defProp(target, name, { get: all[name], enumerable: true });
 };
+var __copyProps = (to, from, except, desc2) => {
+  if (from && typeof from === "object" || typeof from === "function") {
+    for (let key of __getOwnPropNames(from))
+      if (!__hasOwnProp.call(to, key) && key !== except)
+        __defProp(to, key, { get: () => from[key], enumerable: !(desc2 = __getOwnPropDesc(from, key)) || desc2.enumerable });
+  }
+  return to;
+};
+var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
+  // If the importer is in node compatibility mode or this is not an ESM
+  // file that has been converted to a CommonJS file using a Babel-
+  // compatible transform (i.e. "__esModule" has not been set), then set
+  // "default" to the CommonJS "module.exports" for node compatibility.
+  isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
+  mod
+));
+var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
 
 // shared/const.ts
 var const_exports = {};
@@ -30,82 +52,73 @@ var init_const = __esm({
 });
 
 // drizzle/schema.ts
-import {
-  pgTable,
-  text,
-  timestamp,
-  varchar,
-  boolean,
-  integer,
-  serial,
-  pgEnum
-} from "drizzle-orm/pg-core";
-var roleEnum, assessmentTypeEnum, statusEnum, users, participants, assessments, competencyScores, sbiFeedback;
+var import_pg_core, roleEnum, assessmentTypeEnum, statusEnum, users, participants, assessments, competencyScores, sbiFeedback;
 var init_schema = __esm({
   "drizzle/schema.ts"() {
     "use strict";
-    roleEnum = pgEnum("role", ["user", "admin"]);
-    assessmentTypeEnum = pgEnum("assessment_type", ["self", "observation"]);
-    statusEnum = pgEnum("status", ["draft", "completed"]);
-    users = pgTable("users", {
-      id: serial("id").primaryKey(),
-      openId: varchar("openId", { length: 64 }).notNull().unique(),
-      name: text("name"),
-      email: varchar("email", { length: 320 }),
-      loginMethod: varchar("loginMethod", { length: 64 }),
+    import_pg_core = require("drizzle-orm/pg-core");
+    roleEnum = (0, import_pg_core.pgEnum)("role", ["user", "admin"]);
+    assessmentTypeEnum = (0, import_pg_core.pgEnum)("assessment_type", ["self", "observation"]);
+    statusEnum = (0, import_pg_core.pgEnum)("status", ["draft", "completed"]);
+    users = (0, import_pg_core.pgTable)("users", {
+      id: (0, import_pg_core.serial)("id").primaryKey(),
+      openId: (0, import_pg_core.varchar)("openId", { length: 64 }).notNull().unique(),
+      name: (0, import_pg_core.text)("name"),
+      email: (0, import_pg_core.varchar)("email", { length: 320 }),
+      loginMethod: (0, import_pg_core.varchar)("loginMethod", { length: 64 }),
       role: roleEnum("role").default("user").notNull(),
-      createdAt: timestamp("createdAt").defaultNow().notNull(),
-      updatedAt: timestamp("updatedAt").defaultNow().$onUpdate(() => /* @__PURE__ */ new Date()).notNull(),
-      lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull()
+      createdAt: (0, import_pg_core.timestamp)("createdAt").defaultNow().notNull(),
+      updatedAt: (0, import_pg_core.timestamp)("updatedAt").defaultNow().$onUpdate(() => /* @__PURE__ */ new Date()).notNull(),
+      lastSignedIn: (0, import_pg_core.timestamp)("lastSignedIn").defaultNow().notNull()
     });
-    participants = pgTable("participants", {
-      id: serial("id").primaryKey(),
-      participantCode: varchar("participantCode", { length: 16 }).notNull().unique(),
-      fullName: varchar("fullName", { length: 128 }).notNull(),
-      department: varchar("department", { length: 64 }).notNull(),
-      position: varchar("position", { length: 64 }).notNull(),
-      mentorName: varchar("mentorName", { length: 128 }),
-      email: varchar("email", { length: 320 }),
-      joinDate: varchar("joinDate", { length: 32 }),
-      isActive: boolean("isActive").default(true).notNull(),
-      createdAt: timestamp("createdAt").defaultNow().notNull(),
-      updatedAt: timestamp("updatedAt").defaultNow().$onUpdate(() => /* @__PURE__ */ new Date()).notNull()
+    participants = (0, import_pg_core.pgTable)("participants", {
+      id: (0, import_pg_core.serial)("id").primaryKey(),
+      participantCode: (0, import_pg_core.varchar)("participantCode", { length: 16 }).notNull().unique(),
+      fullName: (0, import_pg_core.varchar)("fullName", { length: 128 }).notNull(),
+      department: (0, import_pg_core.varchar)("department", { length: 64 }).notNull(),
+      position: (0, import_pg_core.varchar)("position", { length: 64 }).notNull(),
+      mentorName: (0, import_pg_core.varchar)("mentorName", { length: 128 }),
+      email: (0, import_pg_core.varchar)("email", { length: 320 }),
+      joinDate: (0, import_pg_core.varchar)("joinDate", { length: 32 }),
+      isActive: (0, import_pg_core.boolean)("isActive").default(true).notNull(),
+      createdAt: (0, import_pg_core.timestamp)("createdAt").defaultNow().notNull(),
+      updatedAt: (0, import_pg_core.timestamp)("updatedAt").defaultNow().$onUpdate(() => /* @__PURE__ */ new Date()).notNull()
     });
-    assessments = pgTable("assessments", {
-      id: serial("id").primaryKey(),
-      participantId: integer("participantId").notNull(),
+    assessments = (0, import_pg_core.pgTable)("assessments", {
+      id: (0, import_pg_core.serial)("id").primaryKey(),
+      participantId: (0, import_pg_core.integer)("participantId").notNull(),
       assessmentType: assessmentTypeEnum("assessmentType").notNull(),
-      assessorName: varchar("assessorName", { length: 128 }),
+      assessorName: (0, import_pg_core.varchar)("assessorName", { length: 128 }),
       // null = self
-      assessorRole: varchar("assessorRole", { length: 64 }),
+      assessorRole: (0, import_pg_core.varchar)("assessorRole", { length: 64 }),
       // Mentor, Coach, etc.
-      period: varchar("period", { length: 32 }).notNull().default("2026"),
+      period: (0, import_pg_core.varchar)("period", { length: 32 }).notNull().default("2026"),
       // e.g. "2026-Q1"
       status: statusEnum("status").default("draft").notNull(),
-      notes: text("notes"),
-      createdAt: timestamp("createdAt").defaultNow().notNull(),
-      updatedAt: timestamp("updatedAt").defaultNow().$onUpdate(() => /* @__PURE__ */ new Date()).notNull()
+      notes: (0, import_pg_core.text)("notes"),
+      createdAt: (0, import_pg_core.timestamp)("createdAt").defaultNow().notNull(),
+      updatedAt: (0, import_pg_core.timestamp)("updatedAt").defaultNow().$onUpdate(() => /* @__PURE__ */ new Date()).notNull()
     });
-    competencyScores = pgTable("competency_scores", {
-      id: serial("id").primaryKey(),
-      assessmentId: integer("assessmentId").notNull(),
-      competencyKey: varchar("competencyKey", { length: 64 }).notNull(),
+    competencyScores = (0, import_pg_core.pgTable)("competency_scores", {
+      id: (0, import_pg_core.serial)("id").primaryKey(),
+      assessmentId: (0, import_pg_core.integer)("assessmentId").notNull(),
+      competencyKey: (0, import_pg_core.varchar)("competencyKey", { length: 64 }).notNull(),
       // e.g. "strategic_thinking", "leadership", "communication", etc.
-      score: integer("score").notNull(),
+      score: (0, import_pg_core.integer)("score").notNull(),
       // 1-5
-      behavioralEvidence: text("behavioralEvidence"),
+      behavioralEvidence: (0, import_pg_core.text)("behavioralEvidence"),
       // SBI notes
-      createdAt: timestamp("createdAt").defaultNow().notNull()
+      createdAt: (0, import_pg_core.timestamp)("createdAt").defaultNow().notNull()
     });
-    sbiFeedback = pgTable("sbi_feedback", {
-      id: serial("id").primaryKey(),
-      assessmentId: integer("assessmentId").notNull(),
-      competencyKey: varchar("competencyKey", { length: 64 }).notNull(),
-      situation: text("situation"),
-      behavior: text("behavior"),
-      impact: text("impact"),
-      actionPlan: text("actionPlan"),
-      createdAt: timestamp("createdAt").defaultNow().notNull()
+    sbiFeedback = (0, import_pg_core.pgTable)("sbi_feedback", {
+      id: (0, import_pg_core.serial)("id").primaryKey(),
+      assessmentId: (0, import_pg_core.integer)("assessmentId").notNull(),
+      competencyKey: (0, import_pg_core.varchar)("competencyKey", { length: 64 }).notNull(),
+      situation: (0, import_pg_core.text)("situation"),
+      behavior: (0, import_pg_core.text)("behavior"),
+      impact: (0, import_pg_core.text)("impact"),
+      actionPlan: (0, import_pg_core.text)("actionPlan"),
+      createdAt: (0, import_pg_core.timestamp)("createdAt").defaultNow().notNull()
     });
   }
 });
@@ -153,14 +166,11 @@ __export(db_exports, {
   upsertSbiFeedback: () => upsertSbiFeedback,
   upsertUser: () => upsertUser
 });
-import { eq, and, desc } from "drizzle-orm";
-import postgres from "postgres";
-import { drizzle } from "drizzle-orm/postgres-js";
 async function getDb() {
   if (!_db && process.env.DATABASE_URL) {
     try {
-      _client = postgres(process.env.DATABASE_URL);
-      _db = drizzle(_client);
+      _client = (0, import_postgres.default)(process.env.DATABASE_URL);
+      _db = (0, import_postgres_js.drizzle)(_client);
     } catch (error) {
       console.warn("[Database] Failed to connect:", error);
       _db = null;
@@ -209,7 +219,7 @@ async function upsertUser(user) {
 async function getUserByOpenId(openId) {
   const db = await getDb();
   if (!db) return void 0;
-  const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
+  const result = await db.select().from(users).where((0, import_drizzle_orm.eq)(users.openId, openId)).limit(1);
   return result.length > 0 ? result[0] : void 0;
 }
 async function getAllParticipants() {
@@ -220,7 +230,7 @@ async function getAllParticipants() {
 async function getParticipantById(id) {
   const db = await getDb();
   if (!db) return void 0;
-  const result = await db.select().from(participants).where(eq(participants.id, id)).limit(1);
+  const result = await db.select().from(participants).where((0, import_drizzle_orm.eq)(participants.id, id)).limit(1);
   return result[0];
 }
 async function createParticipant(data) {
@@ -239,22 +249,22 @@ async function updateParticipant(id, data) {
   await db.update(participants).set({
     ...data,
     updatedAt: /* @__PURE__ */ new Date()
-  }).where(eq(participants.id, id));
+  }).where((0, import_drizzle_orm.eq)(participants.id, id));
 }
 async function deleteParticipant(id) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  await db.delete(participants).where(eq(participants.id, id));
+  await db.delete(participants).where((0, import_drizzle_orm.eq)(participants.id, id));
 }
 async function getAssessmentsByParticipant(participantId) {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(assessments).where(eq(assessments.participantId, participantId)).orderBy(desc(assessments.createdAt));
+  return db.select().from(assessments).where((0, import_drizzle_orm.eq)(assessments.participantId, participantId)).orderBy((0, import_drizzle_orm.desc)(assessments.createdAt));
 }
 async function getAssessmentById(id) {
   const db = await getDb();
   if (!db) return void 0;
-  const result = await db.select().from(assessments).where(eq(assessments.id, id)).limit(1);
+  const result = await db.select().from(assessments).where((0, import_drizzle_orm.eq)(assessments.id, id)).limit(1);
   return result[0];
 }
 async function createAssessment(data) {
@@ -274,25 +284,25 @@ async function createAssessment(data) {
 async function completeAssessment(id) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  await db.update(assessments).set({ status: "completed" }).where(eq(assessments.id, id));
+  await db.update(assessments).set({ status: "completed" }).where((0, import_drizzle_orm.eq)(assessments.id, id));
 }
 async function updateAssessmentNotes(id, notes) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  await db.update(assessments).set({ notes }).where(eq(assessments.id, id));
+  await db.update(assessments).set({ notes }).where((0, import_drizzle_orm.eq)(assessments.id, id));
 }
 async function getScoresByAssessment(assessmentId) {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(competencyScores).where(eq(competencyScores.assessmentId, assessmentId));
+  return db.select().from(competencyScores).where((0, import_drizzle_orm.eq)(competencyScores.assessmentId, assessmentId));
 }
 async function upsertCompetencyScore(data) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.delete(competencyScores).where(
-    and(
-      eq(competencyScores.assessmentId, data.assessmentId),
-      eq(competencyScores.competencyKey, data.competencyKey)
+    (0, import_drizzle_orm.and)(
+      (0, import_drizzle_orm.eq)(competencyScores.assessmentId, data.assessmentId),
+      (0, import_drizzle_orm.eq)(competencyScores.competencyKey, data.competencyKey)
     )
   );
   await db.insert(competencyScores).values({
@@ -305,7 +315,7 @@ async function upsertCompetencyScore(data) {
 async function upsertAllScores(assessmentId, scores) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  await db.delete(competencyScores).where(eq(competencyScores.assessmentId, assessmentId));
+  await db.delete(competencyScores).where((0, import_drizzle_orm.eq)(competencyScores.assessmentId, assessmentId));
   if (scores.length > 0) {
     await db.insert(competencyScores).values(
       scores.map((s) => ({
@@ -320,15 +330,15 @@ async function upsertAllScores(assessmentId, scores) {
 async function getSbiFeedbackByAssessment(assessmentId) {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(sbiFeedback).where(eq(sbiFeedback.assessmentId, assessmentId));
+  return db.select().from(sbiFeedback).where((0, import_drizzle_orm.eq)(sbiFeedback.assessmentId, assessmentId));
 }
 async function upsertSbiFeedback(data) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.delete(sbiFeedback).where(
-    and(
-      eq(sbiFeedback.assessmentId, data.assessmentId),
-      eq(sbiFeedback.competencyKey, data.competencyKey)
+    (0, import_drizzle_orm.and)(
+      (0, import_drizzle_orm.eq)(sbiFeedback.assessmentId, data.assessmentId),
+      (0, import_drizzle_orm.eq)(sbiFeedback.competencyKey, data.competencyKey)
     )
   );
   await db.insert(sbiFeedback).values(data);
@@ -354,7 +364,7 @@ async function getDashboardSummary() {
   const allParticipants = await getAllParticipants();
   const db = await getDb();
   if (!db) return allParticipants.map((p) => ({ ...p, selfDone: false, observationDone: false, avgScore: null }));
-  const allAssessments = await db.select().from(assessments).where(eq(assessments.status, "completed"));
+  const allAssessments = await db.select().from(assessments).where((0, import_drizzle_orm.eq)(assessments.status, "completed"));
   return allParticipants.map((p) => {
     const pAssessments = allAssessments.filter((a) => a.participantId === p.id);
     const selfDone = pAssessments.some((a) => a.assessmentType === "self");
@@ -379,10 +389,13 @@ async function getAllAssessmentsWithScores() {
     };
   });
 }
-var _db, _client;
+var import_drizzle_orm, import_postgres, import_postgres_js, _db, _client;
 var init_db = __esm({
   "server/db.ts"() {
     "use strict";
+    import_drizzle_orm = require("drizzle-orm");
+    import_postgres = __toESM(require("postgres"), 1);
+    import_postgres_js = require("drizzle-orm/postgres-js");
     init_schema();
     init_env();
     _db = null;
@@ -438,9 +451,6 @@ var sdk_exports = {};
 __export(sdk_exports, {
   sdk: () => sdk
 });
-import axios from "axios";
-import { parse as parseCookieHeader } from "cookie";
-import { SignJWT, jwtVerify } from "jose";
 function buildCronUser(userInfo) {
   const now = /* @__PURE__ */ new Date();
   return {
@@ -457,12 +467,15 @@ function buildCronUser(userInfo) {
     isCron: true
   };
 }
-var isNonEmptyString, EXCHANGE_TOKEN_PATH, GET_USER_INFO_PATH, GET_USER_INFO_WITH_JWT_PATH, OAuthService, createOAuthHttpClient, SDKServer, CRON_OPEN_ID_PREFIX, sdk;
+var import_axios, import_cookie, import_jose, isNonEmptyString, EXCHANGE_TOKEN_PATH, GET_USER_INFO_PATH, GET_USER_INFO_WITH_JWT_PATH, OAuthService, createOAuthHttpClient, SDKServer, CRON_OPEN_ID_PREFIX, sdk;
 var init_sdk = __esm({
   "server/_core/sdk.ts"() {
     "use strict";
     init_const();
     init_errors();
+    import_axios = __toESM(require("axios"), 1);
+    import_cookie = require("cookie");
+    import_jose = require("jose");
     init_db();
     init_env();
     isNonEmptyString = (value) => typeof value === "string" && value.length > 0;
@@ -506,7 +519,7 @@ var init_sdk = __esm({
         return data;
       }
     };
-    createOAuthHttpClient = () => axios.create({
+    createOAuthHttpClient = () => import_axios.default.create({
       baseURL: ENV.oAuthServerUrl,
       timeout: AXIOS_TIMEOUT_MS
     });
@@ -563,7 +576,7 @@ var init_sdk = __esm({
         if (!cookieHeader) {
           return /* @__PURE__ */ new Map();
         }
-        const parsed = parseCookieHeader(cookieHeader);
+        const parsed = (0, import_cookie.parse)(cookieHeader);
         return new Map(Object.entries(parsed));
       }
       getSessionSecret() {
@@ -590,7 +603,7 @@ var init_sdk = __esm({
         const expiresInMs = options.expiresInMs ?? ONE_YEAR_MS;
         const expirationSeconds = Math.floor((issuedAt + expiresInMs) / 1e3);
         const secretKey = this.getSessionSecret();
-        return new SignJWT({
+        return new import_jose.SignJWT({
           openId: payload.openId,
           appId: payload.appId,
           name: payload.name
@@ -603,7 +616,7 @@ var init_sdk = __esm({
         }
         try {
           const secretKey = this.getSessionSecret();
-          const { payload } = await jwtVerify(cookieValue, secretKey, {
+          const { payload } = await (0, import_jose.jwtVerify)(cookieValue, secretKey, {
             algorithms: ["HS256"]
           });
           const { openId, appId, name } = payload;
@@ -697,24 +710,17 @@ var vite_config_exports = {};
 __export(vite_config_exports, {
   default: () => vite_config_default
 });
-import { jsxLocPlugin } from "@builder.io/vite-plugin-jsx-loc";
-import tailwindcss from "@tailwindcss/vite";
-import react from "@vitejs/plugin-react";
-import fs from "node:fs";
-import path from "node:path";
-import { defineConfig } from "vite";
-import { vitePluginManusRuntime } from "vite-plugin-manus-runtime";
 function ensureLogDir() {
-  if (!fs.existsSync(LOG_DIR)) {
-    fs.mkdirSync(LOG_DIR, { recursive: true });
+  if (!import_node_fs.default.existsSync(LOG_DIR)) {
+    import_node_fs.default.mkdirSync(LOG_DIR, { recursive: true });
   }
 }
 function trimLogFile(logPath, maxSize) {
   try {
-    if (!fs.existsSync(logPath) || fs.statSync(logPath).size <= maxSize) {
+    if (!import_node_fs.default.existsSync(logPath) || import_node_fs.default.statSync(logPath).size <= maxSize) {
       return;
     }
-    const lines = fs.readFileSync(logPath, "utf-8").split("\n");
+    const lines = import_node_fs.default.readFileSync(logPath, "utf-8").split("\n");
     const keptLines = [];
     let keptBytes = 0;
     const targetSize = TRIM_TARGET_BYTES;
@@ -725,7 +731,7 @@ function trimLogFile(logPath, maxSize) {
       keptLines.unshift(lines[i]);
       keptBytes += lineBytes;
     }
-    fs.writeFileSync(logPath, keptLines.join("\n"), "utf-8");
+    import_node_fs.default.writeFileSync(logPath, keptLines.join("\n"), "utf-8");
   } catch {
   }
 }
@@ -737,7 +743,7 @@ function writeToLogFile(source, entries) {
     const ts = (/* @__PURE__ */ new Date()).toISOString();
     return `[${ts}] ${JSON.stringify(entry)}`;
   });
-  fs.appendFileSync(logPath, `${lines.join("\n")}
+  import_node_fs.default.appendFileSync(logPath, `${lines.join("\n")}
 `, "utf-8");
   trimLogFile(logPath, MAX_LOG_SIZE_BYTES);
 }
@@ -807,29 +813,40 @@ function vitePluginManusDebugCollector() {
     }
   };
 }
-var PROJECT_ROOT, LOG_DIR, MAX_LOG_SIZE_BYTES, TRIM_TARGET_BYTES, plugins, vite_config_default;
+var import_vite_plugin_jsx_loc, import_vite, import_plugin_react, import_node_fs, path, import_vite2, import_vite_plugin_manus_runtime, import_url, import_meta, __filename, __dirname, PROJECT_ROOT, LOG_DIR, MAX_LOG_SIZE_BYTES, TRIM_TARGET_BYTES, plugins, vite_config_default;
 var init_vite_config = __esm({
   "vite.config.ts"() {
     "use strict";
-    PROJECT_ROOT = import.meta.dirname;
+    import_vite_plugin_jsx_loc = require("@builder.io/vite-plugin-jsx-loc");
+    import_vite = __toESM(require("@tailwindcss/vite"), 1);
+    import_plugin_react = __toESM(require("@vitejs/plugin-react"), 1);
+    import_node_fs = __toESM(require("node:fs"), 1);
+    path = __toESM(require("node:path"), 1);
+    import_vite2 = require("vite");
+    import_vite_plugin_manus_runtime = require("vite-plugin-manus-runtime");
+    import_url = require("url");
+    import_meta = {};
+    __filename = (0, import_url.fileURLToPath)(import_meta.url);
+    __dirname = path.dirname(__filename);
+    PROJECT_ROOT = __dirname;
     LOG_DIR = path.join(PROJECT_ROOT, ".manus-logs");
     MAX_LOG_SIZE_BYTES = 1 * 1024 * 1024;
     TRIM_TARGET_BYTES = Math.floor(MAX_LOG_SIZE_BYTES * 0.6);
-    plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginManusRuntime(), vitePluginManusDebugCollector()];
-    vite_config_default = defineConfig({
+    plugins = [(0, import_plugin_react.default)(), (0, import_vite.default)(), (0, import_vite_plugin_jsx_loc.jsxLocPlugin)(), (0, import_vite_plugin_manus_runtime.vitePluginManusRuntime)(), vitePluginManusDebugCollector()];
+    vite_config_default = (0, import_vite2.defineConfig)({
       plugins,
       resolve: {
         alias: {
-          "@": path.resolve(import.meta.dirname, "client", "src"),
-          "@shared": path.resolve(import.meta.dirname, "shared"),
-          "@assets": path.resolve(import.meta.dirname, "attached_assets")
+          "@": path.resolve(__dirname, "client", "src"),
+          "@shared": path.resolve(__dirname, "shared"),
+          "@assets": path.resolve(__dirname, "attached_assets")
         }
       },
-      envDir: path.resolve(import.meta.dirname),
-      root: path.resolve(import.meta.dirname, "client"),
-      publicDir: path.resolve(import.meta.dirname, "client", "public"),
+      envDir: path.resolve(__dirname),
+      root: path.resolve(__dirname, "client"),
+      publicDir: path.resolve(__dirname, "client", "public"),
       build: {
-        outDir: path.resolve(import.meta.dirname, "dist/public"),
+        outDir: path.resolve(__dirname, "dist/public"),
         emptyOutDir: true
       },
       server: {
@@ -852,12 +869,19 @@ var init_vite_config = __esm({
   }
 });
 
+// server/vercel.ts
+var vercel_exports = {};
+__export(vercel_exports, {
+  default: () => handler
+});
+module.exports = __toCommonJS(vercel_exports);
+
 // server/_core/index.ts
-import "dotenv/config";
-import express2 from "express";
-import { createServer } from "http";
-import net from "net";
-import { createExpressMiddleware } from "@trpc/server/adapters/express";
+var import_config = require("dotenv/config");
+var import_express2 = __toESM(require("express"), 1);
+var import_http = require("http");
+var import_net = __toESM(require("net"), 1);
+var import_express3 = require("@trpc/server/adapters/express");
 
 // server/_core/oauth.ts
 init_const();
@@ -947,16 +971,16 @@ function registerStorageProxy(app) {
 }
 
 // server/routers.ts
+var import_zod3 = require("zod");
 init_const();
 init_cookies();
-import { z as z3 } from "zod";
 
 // server/_core/systemRouter.ts
-import { z } from "zod";
+var import_zod = require("zod");
 
 // server/_core/notification.ts
+var import_server = require("@trpc/server");
 init_env();
-import { TRPCError } from "@trpc/server";
 var TITLE_MAX_LENGTH = 1200;
 var CONTENT_MAX_LENGTH = 2e4;
 var trimValue = (value) => value.trim();
@@ -970,13 +994,13 @@ var buildEndpointUrl = (baseUrl) => {
 };
 var validatePayload = (input) => {
   if (!isNonEmptyString2(input.title)) {
-    throw new TRPCError({
+    throw new import_server.TRPCError({
       code: "BAD_REQUEST",
       message: "Notification title is required."
     });
   }
   if (!isNonEmptyString2(input.content)) {
-    throw new TRPCError({
+    throw new import_server.TRPCError({
       code: "BAD_REQUEST",
       message: "Notification content is required."
     });
@@ -984,13 +1008,13 @@ var validatePayload = (input) => {
   const title = trimValue(input.title);
   const content = trimValue(input.content);
   if (title.length > TITLE_MAX_LENGTH) {
-    throw new TRPCError({
+    throw new import_server.TRPCError({
       code: "BAD_REQUEST",
       message: `Notification title must be at most ${TITLE_MAX_LENGTH} characters.`
     });
   }
   if (content.length > CONTENT_MAX_LENGTH) {
-    throw new TRPCError({
+    throw new import_server.TRPCError({
       code: "BAD_REQUEST",
       message: `Notification content must be at most ${CONTENT_MAX_LENGTH} characters.`
     });
@@ -1000,13 +1024,13 @@ var validatePayload = (input) => {
 async function notifyOwner(payload) {
   const { title, content } = validatePayload(payload);
   if (!ENV.forgeApiUrl) {
-    throw new TRPCError({
+    throw new import_server.TRPCError({
       code: "INTERNAL_SERVER_ERROR",
       message: "Notification service URL is not configured."
     });
   }
   if (!ENV.forgeApiKey) {
-    throw new TRPCError({
+    throw new import_server.TRPCError({
       code: "INTERNAL_SERVER_ERROR",
       message: "Notification service API key is not configured."
     });
@@ -1039,17 +1063,17 @@ async function notifyOwner(payload) {
 
 // server/_core/trpc.ts
 init_const();
-import { initTRPC, TRPCError as TRPCError2 } from "@trpc/server";
-import superjson from "superjson";
-var t = initTRPC.context().create({
-  transformer: superjson
+var import_server2 = require("@trpc/server");
+var import_superjson = __toESM(require("superjson"), 1);
+var t = import_server2.initTRPC.context().create({
+  transformer: import_superjson.default
 });
 var router = t.router;
 var publicProcedure = t.procedure;
 var requireUser = t.middleware(async (opts) => {
   const { ctx, next } = opts;
   if (!ctx.user) {
-    throw new TRPCError2({ code: "UNAUTHORIZED", message: UNAUTHED_ERR_MSG });
+    throw new import_server2.TRPCError({ code: "UNAUTHORIZED", message: UNAUTHED_ERR_MSG });
   }
   return next({
     ctx: {
@@ -1063,7 +1087,7 @@ var adminProcedure = t.procedure.use(
   t.middleware(async (opts) => {
     const { ctx, next } = opts;
     if (!ctx.user || ctx.user.role !== "admin") {
-      throw new TRPCError2({ code: "FORBIDDEN", message: NOT_ADMIN_ERR_MSG });
+      throw new import_server2.TRPCError({ code: "FORBIDDEN", message: NOT_ADMIN_ERR_MSG });
     }
     return next({
       ctx: {
@@ -1077,16 +1101,16 @@ var adminProcedure = t.procedure.use(
 // server/_core/systemRouter.ts
 var systemRouter = router({
   health: publicProcedure.input(
-    z.object({
-      timestamp: z.number().min(0, "timestamp cannot be negative")
+    import_zod.z.object({
+      timestamp: import_zod.z.number().min(0, "timestamp cannot be negative")
     })
   ).query(() => ({
     ok: true
   })),
   notifyOwner: adminProcedure.input(
-    z.object({
-      title: z.string().min(1, "title is required"),
-      content: z.string().min(1, "content is required")
+    import_zod.z.object({
+      title: import_zod.z.string().min(1, "title is required"),
+      content: import_zod.z.string().min(1, "content is required")
     })
   ).mutation(async ({ input }) => {
     const delivered = await notifyOwner(input);
@@ -1097,17 +1121,17 @@ var systemRouter = router({
 });
 
 // server/routers/ai.ts
-import { z as z2 } from "zod";
+var import_zod2 = require("zod");
 
 // server/lib/llm.ts
-import OpenAI from "openai";
+var import_openai = __toESM(require("openai"), 1);
 var getOpenAIClient = () => {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     console.warn("[LLM] WARNING: API Key (for Groq) is not configured. Chatbot features will be unavailable.");
     return null;
   }
-  return new OpenAI({
+  return new import_openai.default({
     apiKey,
     baseURL: "https://api.groq.com/openai/v1"
   });
@@ -1489,14 +1513,14 @@ var COMPETENCY_MAP = Object.fromEntries(COMPETENCIES.map((c) => [c.key, c]));
 
 // server/routers/ai.ts
 var aiRouter = router({
-  message: publicProcedure.input(z2.object({
-    messages: z2.array(z2.object({
-      role: z2.enum(["system", "user", "assistant"]),
-      content: z2.string()
+  message: publicProcedure.input(import_zod2.z.object({
+    messages: import_zod2.z.array(import_zod2.z.object({
+      role: import_zod2.z.enum(["system", "user", "assistant"]),
+      content: import_zod2.z.string()
     })),
-    participantId: z2.number().optional(),
-    assessmentType: z2.enum(["self", "observation"]).optional(),
-    currentCompetency: z2.string().optional()
+    participantId: import_zod2.z.number().optional(),
+    assessmentType: import_zod2.z.enum(["self", "observation"]).optional(),
+    currentCompetency: import_zod2.z.string().optional()
   })).mutation(async ({ input }) => {
     const participant = input.participantId ? await getParticipantById(input.participantId) : null;
     const competencyContext = COMPETENCIES.map(
@@ -1571,21 +1595,21 @@ var appRouter = router({
     list: publicProcedure.query(async () => {
       return getDashboardSummary();
     }),
-    getById: publicProcedure.input(z3.object({ id: z3.number() })).query(async ({ input }) => {
+    getById: publicProcedure.input(import_zod3.z.object({ id: import_zod3.z.number() })).query(async ({ input }) => {
       return getParticipantById(input.id);
     }),
-    results: publicProcedure.input(z3.object({ participantId: z3.number() })).query(async ({ input }) => {
+    results: publicProcedure.input(import_zod3.z.object({ participantId: import_zod3.z.number() })).query(async ({ input }) => {
       return getParticipantResults(input.participantId);
     }),
     create: publicProcedure.input(
-      z3.object({
-        participantCode: z3.string(),
-        fullName: z3.string(),
-        department: z3.string(),
-        position: z3.string(),
-        mentorName: z3.string().optional(),
-        email: z3.string().email().optional().or(z3.literal("")),
-        joinDate: z3.string().optional()
+      import_zod3.z.object({
+        participantCode: import_zod3.z.string(),
+        fullName: import_zod3.z.string(),
+        department: import_zod3.z.string(),
+        position: import_zod3.z.string(),
+        mentorName: import_zod3.z.string().optional(),
+        email: import_zod3.z.string().email().optional().or(import_zod3.z.literal("")),
+        joinDate: import_zod3.z.string().optional()
       })
     ).mutation(async ({ input }) => {
       const { createParticipant: createParticipant2 } = await Promise.resolve().then(() => (init_db(), db_exports));
@@ -1593,16 +1617,16 @@ var appRouter = router({
       return { id };
     }),
     update: publicProcedure.input(
-      z3.object({
-        id: z3.number(),
-        data: z3.object({
-          participantCode: z3.string().optional(),
-          fullName: z3.string().optional(),
-          department: z3.string().optional(),
-          position: z3.string().optional(),
-          mentorName: z3.string().optional(),
-          email: z3.string().email().optional().or(z3.literal("")),
-          joinDate: z3.string().optional()
+      import_zod3.z.object({
+        id: import_zod3.z.number(),
+        data: import_zod3.z.object({
+          participantCode: import_zod3.z.string().optional(),
+          fullName: import_zod3.z.string().optional(),
+          department: import_zod3.z.string().optional(),
+          position: import_zod3.z.string().optional(),
+          mentorName: import_zod3.z.string().optional(),
+          email: import_zod3.z.string().email().optional().or(import_zod3.z.literal("")),
+          joinDate: import_zod3.z.string().optional()
         })
       })
     ).mutation(async ({ input }) => {
@@ -1610,7 +1634,7 @@ var appRouter = router({
       await updateParticipant2(input.id, input.data);
       return { success: true };
     }),
-    delete: publicProcedure.input(z3.object({ id: z3.number() })).mutation(async ({ input }) => {
+    delete: publicProcedure.input(import_zod3.z.object({ id: import_zod3.z.number() })).mutation(async ({ input }) => {
       const { deleteParticipant: deleteParticipant2 } = await Promise.resolve().then(() => (init_db(), db_exports));
       await deleteParticipant2(input.id);
       return { success: true };
@@ -1618,10 +1642,10 @@ var appRouter = router({
   }),
   // ===== ASSESSMENTS =====
   assessments: router({
-    listByParticipant: publicProcedure.input(z3.object({ participantId: z3.number() })).query(async ({ input }) => {
+    listByParticipant: publicProcedure.input(import_zod3.z.object({ participantId: import_zod3.z.number() })).query(async ({ input }) => {
       return getAssessmentsByParticipant(input.participantId);
     }),
-    getById: publicProcedure.input(z3.object({ id: z3.number() })).query(async ({ input }) => {
+    getById: publicProcedure.input(import_zod3.z.object({ id: import_zod3.z.number() })).query(async ({ input }) => {
       const assessment = await getAssessmentById(input.id);
       if (!assessment) return null;
       const scores = await getScoresByAssessment(input.id);
@@ -1629,30 +1653,30 @@ var appRouter = router({
       return { ...assessment, scores, sbiFeedback: sbi };
     }),
     create: publicProcedure.input(
-      z3.object({
-        participantId: z3.number(),
-        assessmentType: z3.enum(["self", "observation"]),
-        assessorName: z3.string().optional(),
-        assessorRole: z3.string().optional(),
-        period: z3.string().optional(),
-        notes: z3.string().optional()
+      import_zod3.z.object({
+        participantId: import_zod3.z.number(),
+        assessmentType: import_zod3.z.enum(["self", "observation"]),
+        assessorName: import_zod3.z.string().optional(),
+        assessorRole: import_zod3.z.string().optional(),
+        period: import_zod3.z.string().optional(),
+        notes: import_zod3.z.string().optional()
       })
     ).mutation(async ({ input }) => {
       const id = await createAssessment(input);
       return { id };
     }),
     saveScores: publicProcedure.input(
-      z3.object({
-        assessmentId: z3.number(),
-        scores: z3.array(
-          z3.object({
-            competencyKey: z3.string(),
-            score: z3.number().min(1).max(5),
-            behavioralEvidence: z3.string().optional()
+      import_zod3.z.object({
+        assessmentId: import_zod3.z.number(),
+        scores: import_zod3.z.array(
+          import_zod3.z.object({
+            competencyKey: import_zod3.z.string(),
+            score: import_zod3.z.number().min(1).max(5),
+            behavioralEvidence: import_zod3.z.string().optional()
           })
         ),
-        notes: z3.string().optional(),
-        complete: z3.boolean().optional()
+        notes: import_zod3.z.string().optional(),
+        complete: import_zod3.z.boolean().optional()
       })
     ).mutation(async ({ input }) => {
       await upsertAllScores(input.assessmentId, input.scores);
@@ -1665,19 +1689,19 @@ var appRouter = router({
       return { success: true };
     }),
     saveSbiFeedback: publicProcedure.input(
-      z3.object({
-        assessmentId: z3.number(),
-        competencyKey: z3.string(),
-        situation: z3.string().optional(),
-        behavior: z3.string().optional(),
-        impact: z3.string().optional(),
-        actionPlan: z3.string().optional()
+      import_zod3.z.object({
+        assessmentId: import_zod3.z.number(),
+        competencyKey: import_zod3.z.string(),
+        situation: import_zod3.z.string().optional(),
+        behavior: import_zod3.z.string().optional(),
+        impact: import_zod3.z.string().optional(),
+        actionPlan: import_zod3.z.string().optional()
       })
     ).mutation(async ({ input }) => {
       await upsertSbiFeedback(input);
       return { success: true };
     }),
-    complete: publicProcedure.input(z3.object({ id: z3.number() })).mutation(async ({ input }) => {
+    complete: publicProcedure.input(import_zod3.z.object({ id: import_zod3.z.number() })).mutation(async ({ input }) => {
       await completeAssessment(input.id);
       return { success: true };
     })
@@ -1685,7 +1709,7 @@ var appRouter = router({
   // ===== COMPETENCIES =====
   competencies: router({
     list: publicProcedure.query(() => COMPETENCIES),
-    getByKey: publicProcedure.input(z3.object({ key: z3.string() })).query(({ input }) => COMPETENCY_MAP[input.key] ?? null)
+    getByKey: publicProcedure.input(import_zod3.z.object({ key: import_zod3.z.string() })).query(({ input }) => COMPETENCY_MAP[input.key] ?? null)
   }),
   // ===== AI CHATBOT =====
   chat: aiRouter,
@@ -1714,10 +1738,14 @@ async function createContext(opts) {
 }
 
 // server/_core/vite.ts
-import express from "express";
-import fs2 from "fs";
-import { nanoid } from "nanoid";
-import path2 from "path";
+var import_express = __toESM(require("express"), 1);
+var import_fs = __toESM(require("fs"), 1);
+var import_nanoid = require("nanoid");
+var import_path = __toESM(require("path"), 1);
+var import_url2 = require("url");
+var import_meta2 = {};
+var __filename2 = (0, import_url2.fileURLToPath)(import_meta2.url);
+var __dirname2 = import_path.default.dirname(__filename2);
 async function setupVite(app, server) {
   const serverOptions = {
     middlewareMode: true,
@@ -1736,16 +1764,16 @@ async function setupVite(app, server) {
   app.use("*", async (req, res, next) => {
     const url = req.originalUrl;
     try {
-      const clientTemplate = path2.resolve(
-        import.meta.dirname,
+      const clientTemplate = import_path.default.resolve(
+        __dirname2,
         "../..",
         "client",
         "index.html"
       );
-      let template = await fs2.promises.readFile(clientTemplate, "utf-8");
+      let template = await import_fs.default.promises.readFile(clientTemplate, "utf-8");
       template = template.replace(
         `src="/src/main.tsx"`,
-        `src="/src/main.tsx?v=${nanoid()}"`
+        `src="/src/main.tsx?v=${(0, import_nanoid.nanoid)()}"`
       );
       const page = await vite.transformIndexHtml(url, template);
       res.status(200).set({ "Content-Type": "text/html" }).end(page);
@@ -1756,26 +1784,26 @@ async function setupVite(app, server) {
   });
 }
 function serveStatic(app) {
-  const distPath = process.env.NODE_ENV === "development" ? path2.resolve(import.meta.dirname, "../..", "dist", "public") : path2.resolve(import.meta.dirname, "public");
-  if (!fs2.existsSync(distPath)) {
+  const distPath = process.env.NODE_ENV === "development" ? import_path.default.resolve(__dirname2, "../..", "dist", "public") : import_path.default.resolve(__dirname2, "public");
+  if (!import_fs.default.existsSync(distPath)) {
     console.error(
       `Could not find the build directory: ${distPath}, make sure to build the client first`
     );
   }
-  app.use(express.static(distPath));
+  app.use(import_express.default.static(distPath));
   app.use("*", (_req, res) => {
-    res.sendFile(path2.resolve(distPath, "index.html"));
+    res.sendFile(import_path.default.resolve(distPath, "index.html"));
   });
 }
 
 // server/_core/index.ts
 function isPortAvailable(port) {
-  return new Promise((resolve) => {
-    const server = net.createServer();
+  return new Promise((resolve2) => {
+    const server = import_net.default.createServer();
     server.listen(port, () => {
-      server.close(() => resolve(true));
+      server.close(() => resolve2(true));
     });
-    server.on("error", () => resolve(false));
+    server.on("error", () => resolve2(false));
   });
 }
 async function findAvailablePort(startPort = 3e3) {
@@ -1787,10 +1815,10 @@ async function findAvailablePort(startPort = 3e3) {
   throw new Error(`No available port found starting from ${startPort}`);
 }
 async function createApp() {
-  const app = express2();
-  const server = createServer(app);
-  app.use(express2.json({ limit: "50mb" }));
-  app.use(express2.urlencoded({ limit: "50mb", extended: true }));
+  const app = (0, import_express2.default)();
+  const server = (0, import_http.createServer)(app);
+  app.use(import_express2.default.json({ limit: "50mb" }));
+  app.use(import_express2.default.urlencoded({ limit: "50mb", extended: true }));
   registerStorageProxy(app);
   registerOAuthRoutes(app);
   app.get("/api/auth/dev-login", async (req, res) => {
@@ -1851,7 +1879,7 @@ async function createApp() {
   });
   app.use(
     "/api/trpc",
-    createExpressMiddleware({
+    (0, import_express3.createExpressMiddleware)({
       router: appRouter,
       createContext
     })
@@ -1881,6 +1909,3 @@ async function handler(req, res) {
   const { app } = await createApp();
   return app(req, res);
 }
-export {
-  handler as default
-};
