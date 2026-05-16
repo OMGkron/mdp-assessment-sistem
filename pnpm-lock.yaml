@@ -253,7 +253,7 @@ importers:
         specifier: ^0.31.4
         version: 0.31.10
       esbuild:
-        specifier: ^0.25.0
+        specifier: ^0.25.12
         version: 0.25.12
       pnpm:
         specifier: ^9.15.0
@@ -268,7 +268,7 @@ importers:
         specifier: ^4.1.14
         version: 4.3.0
       tsx:
-        specifier: ^4.19.1
+        specifier: ^4.22.0
         version: 4.22.0
       tw-animate-css:
         specifier: ^1.4.0
@@ -277,7 +277,7 @@ importers:
         specifier: 5.9.3
         version: 5.9.3
       vite:
-        specifier: ^7.1.7
+        specifier: ^7.3.3
         version: 7.3.3(@types/node@24.12.4)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.22.0)
       vite-plugin-manus-runtime:
         specifier: ^0.0.57
