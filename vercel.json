@@ -7,14 +7,14 @@
     "NODE_ENV": "production"
   },
   "functions": {
-    "api/index.ts": {
+    "api/index.js": {
       "includeFiles": "server/**"
     }
   },
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "api/index.ts"
+      "dest": "api/index.js"
     }
   ]
 }
